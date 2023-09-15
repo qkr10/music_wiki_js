@@ -109,6 +109,7 @@ function abc(node, content) {
     ];
 }
 
+//getMarkdown() 으로 가져올 텍스트랑 textarea.value 랑 동기화시켜줌
 function replaceABC(payload, state, dispatch) {
     console.log(`replaceABC : `);
 
@@ -145,6 +146,8 @@ function replaceABC(payload, state, dispatch) {
     return true;
 }
 
+//pitch 숫자 를 pitch 문자열로 변환
+//드래그 시작/끝 마다 호출됨
 function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent) {
     const textarea = this;
 
@@ -162,6 +165,7 @@ function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent)
     console.log(afterNote);
     console.log({ abcelem, tuneNumber, classes, analysis, drag, mouseEvent });
 
+    //드래그 시작과 끝이 음정의 변화가 있는 상황
     if (beforeNote !== afterNote) {
         console.log(`${beforeNote} => ${afterNote}`);
         const left = textarea.value.substr(0, start);
