@@ -3,7 +3,7 @@ import abcPlugin from './tuiPlugin/abcPlugin';
 import Editor from 'qkr10-tui-editor';
 import 'qkr10-tui-editor/dist/toastui-editor.css';
 
-import { setEditor } from './globalVariables';
+import * as globalVariables from './globalVariables';
 
 const content = `asdfasdfasdf
 $$abc
@@ -30,5 +30,5 @@ function onLoad() {
     initialValue: content
   });
 
-  setEditor(editor);
+  globalVariables.setEditor(editor);
 }

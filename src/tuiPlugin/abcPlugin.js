@@ -1,5 +1,5 @@
 import abcjs from "qkr10-abcjs";
-import { getEditor } from "../globalVariables.js";
+import * as globalVariables from "../globalVariables.js";
 
 let pmModules;
 const primeArr = [2, 3, 5, 7, 11,
@@ -149,7 +149,75 @@ function getPitchChar(pitch) {
         g: 11
     };
 
-    return Object.keys(pitches).find(key => pitches[key] === afterPitch);
+    return Object.keys(pitches).find(key => pitches[key] === pitch);
+}
+
+function changePitchOfNode(beforeNode, pitch) {
+    const pitchStr = getPitchChar(pitch);
+
+    console.log(`changePitchOfNode() :`);
+    console.log({ beforeNode, pitch });
+
+    const findPitchAtNodeByRegex = /[a-zA-Z]/g;
+    const resultOfRegex = findPitchAtNodeByRegex.exec(beforeNode);
+    if (resultOfRegex === null) {
+        console.log(`changePitchAtNode() : ${beforeNode} is not Node`);
+        return beforeNode;
+    }
+
+    console.log(`changePitchOfNode() :`);
+    console.log({ resultOfRegex, findPitchAtNodeByRegex });
+
+    const pitchLength = 1;
+
+    const startIndexOfPitch = findPitchAtNodeByRegex.lastIndex - pitchLength;
+    const nodeLeftStr = beforeNode.substr(0, startIndexOfPitch);
+
+    const endIndexOfPitch = findPitchAtNodeByRegex.lastIndex;
+    const nodeRightStr = beforeNode.substr(endIndexOfPitch);
+
+    console.log(`changePitchOfNode() :`);
+    console.log({ startIndexOfPitch, nodeLeftStr, endIndexOfPitch, nodeRightStr });
+
+    console.log(`changePitchOfNode() :`);
+    console.log(`${nodeLeftStr}${pitchStr}${nodeRightStr}`);
+
+    return `${nodeLeftStr}${pitchStr}${nodeRightStr}`;
+}
+
+function applyDragChanges(text, dragStart, dragEnd) {
+    console.log(`applyDragChanges() :`);
+    console.log({ text, dragStart, dragEnd });
+
+    const isDragStartFirst = dragStart.pos.start <= dragEnd.pos.start;
+    const isSamePos = dragStart.pos.start === dragEnd.pos.start;
+
+    const firstPos = isDragStartFirst ? dragStart.pos : dragEnd.pos;
+    const firstNote = isDragStartFirst ? dragStart.note : dragEnd.note;
+
+    const secondPos = !isDragStartFirst ? dragStart.pos : dragEnd.pos;
+    const secondNote = !isDragStartFirst ? dragStart.note : dragEnd.note;
+
+    let textArr = [
+        text.substr(0, firstPos.start),
+        firstNote,
+        text.substr(firstPos.end, secondPos.start - firstPos.end),
+        secondNote,
+        text.substr(secondPos.end)
+    ];
+    if (isSamePos) {
+        textArr = [
+            text.substr(0, firstPos.start),
+            firstNote,
+            text.substr(firstPos.end)
+        ];
+    }
+
+    console.log(`applyDragChanges() :`);
+    console.log(textArr);
+
+    const result = textArr.join("");
+    return result;
 }
 
 //드래그 시작/끝 마다 호출됨
@@ -160,24 +228,35 @@ function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent)
     const end = textarea.selectionEnd;
 
     console.log(`${start} ~ ${end}`);
-
-    const beforeNote = textarea.value.substr(start, end - start);
-    const afterPitchChar = getPitchChar(abcelem.averagepitch - drag.step);
-    const afterNote = afterPitchChar;
-
-    console.log(afterNote);
     console.log({ abcelem, tuneNumber, classes, analysis, drag, mouseEvent });
 
-    //드래그 시작과 끝이 음정의 변화가 있는 상황
-    if (beforeNote !== afterNote) {
-        console.log(`${beforeNote} => ${afterNote}`);
-        const left = textarea.value.substr(0, start);
-        const right = textarea.value.substr(end);
-        textarea.value = `${left}${afterNote}${right}`;
-        textarea.dispatchEvent(new Event("change"));
-        getEditor().exec("replaceABC", { textarea });
+    const selectedNote = textarea.value.substr(start, end - start);
+    if (mouseEvent.type === "mousedown") {
+        globalVariables.setDragStart({ note: selectedNote, pos: { start, end }, pitch: abcelem.averagepitch });
+        return;
     }
-    setTimeout(() => getEditor().moveCursorToStart(), 1);
+
+    //드래그가 끝났을때
+    const dragStart = globalVariables.dragStart;
+    const dragEnd = { note: selectedNote, pos: { start, end }, pitch: abcelem.averagepitch };
+    let isPosChanged = false;
+
+    if (drag.step !== 0) {
+        //음정 변화가 생긴경우
+        dragStart.pitch -= drag.step;
+        dragStart.note = changePitchOfNode(dragStart.note, dragStart.pitch);
+    }
+    if (dragStart.pos.start !== dragEnd.pos.start) {
+        //음표 위치 변화가 생긴경우
+        const tempPos = dragStart.pos;
+        dragStart.pos = dragEnd.pos;
+        dragEnd.pos = tempPos;
+        isPosChanged = true;
+    }
+
+    textarea.value = applyDragChanges(textarea.value, dragStart, dragEnd);
+    textarea.dispatchEvent(new Event("change"));
+    globalVariables.editor.exec("replaceABC", { textarea });
 }
 
 function getHash(str, arr = primeArr, r = 1234567891) {
