@@ -2,22 +2,6 @@ import abcjs from "qkr10-abcjs";
 import { getEditor } from "../globalVariables.js";
 
 let pmModules;
-const pitches = {
-    A: 5,
-    B: 6,
-    C: 0,
-    D: 1,
-    E: 2,
-    F: 3,
-    G: 4,
-    a: 12,
-    b: 13,
-    c: 7,
-    d: 8,
-    e: 9,
-    f: 10,
-    g: 11
-};
 const primeArr = [2, 3, 5, 7, 11,
     13, 17, 19, 23, 29,
     31, 37, 41, 43, 47,
@@ -147,6 +131,27 @@ function replaceABC(payload, state, dispatch) {
 }
 
 //pitch 숫자 를 pitch 문자열로 변환
+function getPitchChar(pitch) {
+    const pitches = {
+        A: 5,
+        B: 6,
+        C: 0,
+        D: 1,
+        E: 2,
+        F: 3,
+        G: 4,
+        a: 12,
+        b: 13,
+        c: 7,
+        d: 8,
+        e: 9,
+        f: 10,
+        g: 11
+    };
+
+    return Object.keys(pitches).find(key => pitches[key] === afterPitch);
+}
+
 //드래그 시작/끝 마다 호출됨
 function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent) {
     const textarea = this;
@@ -157,10 +162,8 @@ function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent)
     console.log(`${start} ~ ${end}`);
 
     const beforeNote = textarea.value.substr(start, end - start);
-    const beforePitch = abcelem.averagepitch;
-    const afterPitch = beforePitch - drag.step;
-    const afterPitchCh = Object.keys(pitches).find(key => pitches[key] === afterPitch);
-    const afterNote = afterPitchCh;
+    const afterPitchChar = getPitchChar(abcelem.averagepitch - drag.step);
+    const afterNote = afterPitchChar;
 
     console.log(afterNote);
     console.log({ abcelem, tuneNumber, classes, analysis, drag, mouseEvent });
