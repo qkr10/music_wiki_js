@@ -38,13 +38,13 @@ function abc(node, content) {
 
     let hash = getHash(abcString);
     let name = `abc${hash}`;
-    console.log(`name : ${name}`);
+    // console.log(`name : ${name}`);
 
     const textareaArr = document.getElementsByName(`text${name}`);
 
     if (treePosition === "" || node.wysiwygNode || textareaArr.length > 0) {
-        console.log("wysiwyg");
-        console.log({ node, content });
+        // console.log("wysiwyg");
+        // console.log({ node, content });
 
         const textarea = textareaArr[0];
         id = `wysiwyg${textarea.id}`;
@@ -62,8 +62,8 @@ function abc(node, content) {
             1000
         );
     } else {
-        console.log("markdown");
-        console.log({ node, content });
+        // console.log("markdown");
+        // console.log({ node, content });
 
         const textarea = document.createElement("textarea");
         textarea.value = abcString;
@@ -95,7 +95,7 @@ function abc(node, content) {
 
 //getMarkdown() 으로 가져올 텍스트랑 textarea.value 랑 동기화시켜줌
 function replaceABC(payload, state, dispatch) {
-    console.log(`replaceABC : `);
+    // console.log(`replaceABC : `);
 
     const textarea = payload.textarea;
     const newAbcString = textarea.value;
@@ -111,22 +111,22 @@ function replaceABC(payload, state, dispatch) {
     const abcNodeSchema = abcNode.type.schema;
     const abcNodeJSON = abcNode.toJSON();
     const abcFragmentJSON = abcNode.content.toJSON();
-    console.log(abcNode);
-    console.log(abcNodeSchema);
-    console.log(abcNodeJSON);
-    console.log(abcFragmentJSON);
+    // console.log(abcNode);
+    // console.log(abcNodeSchema);
+    // console.log(abcNodeJSON);
+    // console.log(abcFragmentJSON);
 
     abcFragmentJSON[0].text = newAbcString;
     const newAbcFragment = pmModules.pmModel.Fragment.fromJSON(abcNodeSchema, abcFragmentJSON);
     const newAbcNode = abcNode.copy(newAbcFragment);
-    console.log(newAbcNode);
+    // console.log(newAbcNode);
 
     const start = result.offset;
     const end = start + result.node.nodeSize;
     const abcSelection = pmModules.pmState.TextSelection.create(state.doc, start, end);
     const newTr = state.tr.setSelection(abcSelection).replaceSelectionWith(newAbcNode);
     dispatch(newTr);
-    console.log(state.apply(newTr));
+    // console.log(state.apply(newTr));
     return true;
 }
 
@@ -155,8 +155,8 @@ function getPitchChar(pitch) {
 function changePitchOfNode(beforeNode, pitch) {
     const pitchStr = getPitchChar(pitch);
 
-    console.log(`changePitchOfNode() :`);
-    console.log({ beforeNode, pitch });
+    // console.log(`changePitchOfNode() :`);
+    // console.log({ beforeNode, pitch });
 
     const findPitchAtNodeByRegex = /[a-zA-Z]/g;
     const resultOfRegex = findPitchAtNodeByRegex.exec(beforeNode);
@@ -165,8 +165,8 @@ function changePitchOfNode(beforeNode, pitch) {
         return beforeNode;
     }
 
-    console.log(`changePitchOfNode() :`);
-    console.log({ resultOfRegex, findPitchAtNodeByRegex });
+    // console.log(`changePitchOfNode() :`);
+    // console.log({ resultOfRegex, findPitchAtNodeByRegex });
 
     const pitchLength = 1;
 
@@ -176,18 +176,18 @@ function changePitchOfNode(beforeNode, pitch) {
     const endIndexOfPitch = findPitchAtNodeByRegex.lastIndex;
     const nodeRightStr = beforeNode.substr(endIndexOfPitch);
 
-    console.log(`changePitchOfNode() :`);
-    console.log({ startIndexOfPitch, nodeLeftStr, endIndexOfPitch, nodeRightStr });
+    // console.log(`changePitchOfNode() :`);
+    // console.log({ startIndexOfPitch, nodeLeftStr, endIndexOfPitch, nodeRightStr });
 
-    console.log(`changePitchOfNode() :`);
-    console.log(`${nodeLeftStr}${pitchStr}${nodeRightStr}`);
+    // console.log(`changePitchOfNode() :`);
+    // console.log(`${nodeLeftStr}${pitchStr}${nodeRightStr}`);
 
     return `${nodeLeftStr}${pitchStr}${nodeRightStr}`;
 }
 
 function applyDragChanges(text, dragStart, dragEnd) {
-    console.log(`applyDragChanges() :`);
-    console.log({ text, dragStart, dragEnd });
+    // console.log(`applyDragChanges() :`);
+    // console.log({ text, dragStart, dragEnd });
 
     const isDragStartFirst = dragStart.pos.start <= dragEnd.pos.start;
     const isSamePos = dragStart.pos.start === dragEnd.pos.start;
@@ -213,8 +213,8 @@ function applyDragChanges(text, dragStart, dragEnd) {
         ];
     }
 
-    console.log(`applyDragChanges() :`);
-    console.log(textArr);
+    // console.log(`applyDragChanges() :`);
+    // console.log(textArr);
 
     const result = textArr.join("");
     return result;
@@ -227,8 +227,8 @@ function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent)
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
 
-    console.log(`${start} ~ ${end}`);
-    console.log({ abcelem, tuneNumber, classes, analysis, drag, mouseEvent });
+    // console.log(`${start} ~ ${end}`);
+    // console.log({ abcelem, tuneNumber, classes, analysis, drag, mouseEvent });
 
     const selectedNote = textarea.value.substr(start, end - start);
     if (mouseEvent.type === "mousedown") {
