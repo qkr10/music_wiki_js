@@ -56,6 +56,8 @@ function abc(node, content) {
                     dragging,
                     clickListener: clickListener.bind(textarea)
                 };
+                const divEle = document.querySelector(`#${id}`);
+                divEle.addEventListener("mousedown", (e) => { e.stopPropagation(); })
                 const params = { canvas_id: id, abcjsParams: options };
                 const editor = new abcjs.Editor(textarea.id, params);
             },
@@ -80,6 +82,8 @@ function abc(node, content) {
                     dragging,
                     clickListener: clickListener.bind(textarea)
                 };
+                const divEle = document.querySelector(`#${id}`);
+                divEle.addEventListener("mousedown", (e) => { e.stopPropagation(); })
                 const params = { canvas_id: id, abcjsParams: options };
                 const editor = new abcjs.Editor(textarea.id, params);
             },
