@@ -236,12 +236,12 @@ function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent)
     let isPosChanged = false;
 
     if (drag.step !== 0) {
-        //음정 변화가 생긴경우
+        //dragStart에 음정 변화가 생긴경우
         dragStart.pitch -= drag.step;
         dragStart.note = changePitchOfNode(dragStart.note, dragStart.pitch);
     }
     if (dragStart.pos.start !== dragEnd.pos.start) {
-        //음표 위치 변화가 생긴경우
+        //음표가 좌우로 움직인 경우
         const tempPos = dragStart.pos;
         dragStart.pos = dragEnd.pos;
         dragEnd.pos = tempPos;
