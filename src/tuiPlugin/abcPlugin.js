@@ -145,8 +145,14 @@ function replaceABC(payload, state, dispatch) {
 function applyDragChanges(text, dragStart, dragEnd, mode = "move") {
     // console.log(`applyDragChanges() :`);
     console.log({ text, dragStart, dragEnd });
+    
+    if (mode === "swap") {
+        const temp = dragStart.pos;
+        dragStart.pos = dragEnd.pos;
+        dragEnd.pos = temp;
+    }
 
-    let isDragStartFirst = dragStart.pos.start <= dragEnd.pos.start;
+    const isDragStartFirst = dragStart.pos.start <= dragEnd.pos.start;
     const isSamePos = dragStart.pos.start === dragEnd.pos.start;
 
     if (mode === "move" && !isSamePos) {
@@ -165,12 +171,6 @@ function applyDragChanges(text, dragStart, dragEnd, mode = "move") {
         }
 
         dragEnd.addNote(movingNote); //화음 추가하기
-    }
-    else if (mode === "swap") {
-        const temp = dragStart.pos;
-        dragStart.pos = dragEnd.pos;
-        dragEnd.pos = temp;
-        isDragStartFirst = !isDragStartFirst;
     }
 
     const firstPos = isDragStartFirst ? dragStart.pos : dragEnd.pos;
