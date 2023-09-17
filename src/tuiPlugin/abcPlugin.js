@@ -49,20 +49,7 @@ function abc(node, content) {
         const textarea = textareaArr[0];
         id = `wysiwyg${textarea.id}`;
 
-        setTimeout(
-            () => {
-                const dragging = true;
-                const options = {
-                    dragging,
-                    clickListener: clickListener.bind(textarea)
-                };
-                const divEle = document.querySelector(`#${id}`);
-                divEle.addEventListener("mousedown", (e) => { e.stopPropagation(); })
-                const params = { canvas_id: id, abcjsParams: options };
-                const editor = new abcjs.Editor(textarea.id, params);
-            },
-            1000
-        );
+        renderNewABC(textarea, id);
     } else {
         // console.log("markdown");
         // console.log({ node, content });
@@ -75,26 +62,29 @@ function abc(node, content) {
 
         document.body.appendChild(textarea);
 
-        setTimeout(
-            () => {
-                const dragging = true;
-                const options = {
-                    dragging,
-                    clickListener: clickListener.bind(textarea)
-                };
-                const divEle = document.querySelector(`#${id}`);
-                divEle.addEventListener("mousedown", (e) => { e.stopPropagation(); })
-                const params = { canvas_id: id, abcjsParams: options };
-                const editor = new abcjs.Editor(textarea.id, params);
-            },
-            1000
-        );
+        renderNewABC(textarea, id);
     }
 
     return [
         { type: 'openTag', tagName: 'div', outerNewLine: true, attributes: { id, name } },
         { type: 'closeTag', tagName: 'div', outerNewLine: true }
     ];
+}
+
+function renderNewABC(textarea, id) {
+    setTimeout(() => {
+        const dragging = true;
+        const options = {
+            dragging,
+            clickListener: clickListener.bind(textarea)
+        };
+        const divEle = document.querySelector(`#${id}`);
+        divEle.addEventListener("mousedown", (e) => { e.stopPropagation(); });
+        const params = { canvas_id: id, abcjsParams: options };
+        const editor = new abcjs.Editor(textarea.id, params);
+    },
+        1000
+    );
 }
 
 //getMarkdown() 으로 가져올 텍스트랑 textarea.value 랑 동기화시켜줌
