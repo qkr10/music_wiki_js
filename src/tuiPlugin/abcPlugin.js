@@ -1,6 +1,7 @@
 import abcjs from "qkr10-abcjs";
 import * as globalVariables from "../globalVariables";
 import Note from "./note.js";
+import TextOperation from "./textOperation";
 
 let pmModules;
 const primeArr = [2, 3, 5, 7, 11,
@@ -89,6 +90,7 @@ function abc(node, content) {
     ];
 }
 
+//주어진 textarea element 와 div id 로 악보를 렌더링함.
 function renderNewABC(textarea, id) {
     setTimeout(() => {
         const dragging = true;
@@ -142,65 +144,6 @@ function replaceABC(payload, state, dispatch) {
     return true;
 }
 
-function applyDragChanges(text, dragStart, dragEnd, mode = "move") {
-    // console.log(`applyDragChanges() :`);
-    console.log({ text, dragStart, dragEnd });
-    
-    if (mode === "swap") {
-        const temp = dragStart.pos;
-        dragStart.pos = dragEnd.pos;
-        dragEnd.pos = temp;
-    }
-
-    const isDragStartFirst = dragStart.pos.start <= dragEnd.pos.start;
-    const isSamePos = dragStart.pos.start === dragEnd.pos.start;
-
-    if (mode === "move" && !isSamePos) {
-        let movingNote = dragStart.note;
-
-        if (dragStart.isRest()) { //쉼표라면
-            dragStart.note = dragEnd.note;
-            dragEnd.note = movingNote;
-        }
-        else if (!dragStart.isChord()) { //화음이 아니라면
-            dragStart.changePitchOfNote(-1); //쉼표로 바꾸기
-        }
-        else { //화음이라면
-            dragStart.removeNote(dragStart.clickedNote.pos); //클릭된 음표만 지우기
-            movingNote = dragStart.clickedNote.note;
-        }
-
-        dragEnd.addNote(movingNote); //화음 추가하기
-    }
-
-    const firstPos = isDragStartFirst ? dragStart.pos : dragEnd.pos;
-    const firstNote = isDragStartFirst ? dragStart.note : dragEnd.note;
-
-    const secondPos = !isDragStartFirst ? dragStart.pos : dragEnd.pos;
-    const secondNote = !isDragStartFirst ? dragStart.note : dragEnd.note;
-
-    let textArr = [
-        text.substr(0, firstPos.start),
-        firstNote,
-        text.substr(firstPos.end, secondPos.start - firstPos.end),
-        secondNote,
-        text.substr(secondPos.end)
-    ];
-    if (isSamePos) {
-        textArr = [
-            text.substr(0, firstPos.start),
-            firstNote,
-            text.substr(firstPos.end)
-        ];
-    }
-
-    // console.log(`applyDragChanges() :`);
-    console.log(textArr);
-
-    const result = textArr.join("");
-    return result;
-}
-
 //드래그 시작/끝 마다 호출됨
 function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent) {
     const textarea = this;
@@ -220,18 +163,24 @@ function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent)
         selectedNote.getClickedNoteByPitch(clickedNotePitch);
     }
 
+    //드래그가 시작할때만 실행되는 코드
     if (mouseEvent.type === "mousedown") {
         globalVariables.setDragStart(selectedNote);
         return;
     }
 
-    //드래그가 끝났을때
+    //드래그가 끝났을때만 실행되는 코드
     const dragStart = globalVariables.dragStart;
     const dragEnd = selectedNote;
 
     dragStart.changePitch(drag.step);
 
-    textarea.value = applyDragChanges(textarea.value, dragStart, dragEnd);
+    const textOperation = new TextOperation();
+    textOperation.begin(textarea);
+    textOperation.setNotes([dragStart, dragEnd]);
+    textOperation.moveFirstToSecond();
+    textOperation.end();
+
     textarea.dispatchEvent(new Event("change"));
     globalVariables.editor.exec("replaceABC", { textarea });
 }
