@@ -32,62 +32,62 @@ export default class TextOperation {
     }
 
     swapTwoNotes() {
-        const temp = first.pos;
-        first.pos = second.pos;
-        second.pos = temp;
+        const temp = this.first.pos;
+        this.first.pos = this.second.pos;
+        this.second.pos = temp;
 
         this.applyTwoNotesToText();
     }
 
     moveFirstToSecond() {
-        const isSamePos = first.pos.start === second.pos.start;
+        const isSamePos = this.first.pos.start === this.second.pos.start;
         if (isSamePos) {
             this.applyTwoNotesToText();
             return;
         }
 
-        let movingNote = first.note;
+        let movingNote = this.first.note;
 
-        if (first.isRest()) { //쉼표라면
-            first.note = second.note;
-            second.note = movingNote;
+        if (this.first.isRest()) { //쉼표라면
+            this.first.note = this.second.note;
+            this.second.note = movingNote;
         }
-        else if (!first.isChord()) { //화음이 아니라면
-            first.changePitchOfNote(-1); //쉼표로 바꾸기
+        else if (!this.first.isChord()) { //화음이 아니라면
+            this.first.changePitchOfNote(-1); //쉼표로 바꾸기
         }
         else { //화음이라면
-            first.removeNote(first.clickedNote.pos); //클릭된 음표만 지우기
-            movingNote = first.clickedNote.note;
+            this.first.removeNote(this.first.clickedNote.pos); //클릭된 음표만 지우기
+            movingNote = this.first.clickedNote.note;
         }
 
-        second.addNote(movingNote); //화음 추가하기
+        this.second.addNote(movingNote); //화음 추가하기
 
         this.applyTwoNotesToText();
     }
 
     applyTwoNotesToText() {
-        const isSameOrder = first.pos.start <= second.pos.start;
-        const isSamePos = first.pos.start === second.pos.start;
+        const isSameOrder = this.first.pos.start <= this.second.pos.start;
+        const isSamePos = this.first.pos.start === this.second.pos.start;
 
-        const firstPos = isSameOrder ? first.pos : second.pos;
-        const firstNote = isSameOrder ? first.note : second.note;
+        const firstPos = isSameOrder ? this.first.pos : this.second.pos;
+        const firstNote = isSameOrder ? this.first.note : this.second.note;
 
-        const secondPos = !isSameOrder ? first.pos : second.pos;
-        const secondNote = !isSameOrder ? first.note : second.note;
+        const secondPos = !isSameOrder ? this.first.pos : this.second.pos;
+        const secondNote = !isSameOrder ? this.first.note : this.second.note;
 
         let textArr = [
-            text.substr(0, firstPos.start),
+            this.text.substr(0, firstPos.start),
             firstNote,
-            text.substr(firstPos.end, secondPos.start - firstPos.end),
+            this.text.substr(firstPos.end, secondPos.start - firstPos.end),
             secondNote,
-            text.substr(secondPos.end)
+            this.text.substr(secondPos.end)
         ];
 
         if (isSamePos) {
             textArr = [
-                text.substr(0, firstPos.start),
+                this.text.substr(0, firstPos.start),
                 firstNote,
-                text.substr(firstPos.end)
+                this.text.substr(firstPos.end)
             ];
         }
 
