@@ -1,5 +1,6 @@
 import abcjs from "qkr10-abcjs";
-import * as globalVariables from "../globalVariables.js";
+import * as globalVariables from "../globalVariables";
+import Note from "./note.js";
 
 let pmModules;
 const primeArr = [2, 3, 5, 7, 11,
@@ -141,113 +142,42 @@ function replaceABC(payload, state, dispatch) {
     return true;
 }
 
-//pitch 숫자 를 pitch 문자열로 변환
-function getPitchChar(pitch) {
-    return Object.keys(pitches).find(key => pitches[key] === pitch);
-}
-
-function changePitchOfNote(beforeNote, pitch) {
-    const pitchStr = getPitchChar(pitch);
-
-    // console.log(`changePitchOfNote() :`);
-    // console.log({ beforeNote, pitch });
-
-    const findPitchAtNoteByRegex = /[a-zA-Z]/g;
-    const resultOfRegex = findPitchAtNoteByRegex.exec(beforeNote);
-    if (resultOfRegex === null) {
-        console.log(`changePitchAtNote() : ${beforeNote} is not Note`);
-        return beforeNote;
-    }
-
-    // console.log(`changePitchOfNote() :`);
-    // console.log({ resultOfRegex, findPitchAtNoteByRegex });
-
-    const pitchLength = 1;
-
-    const startIndexOfPitch = findPitchAtNoteByRegex.lastIndex - pitchLength;
-    const noteLeftStr = beforeNote.substr(0, startIndexOfPitch);
-
-    const endIndexOfPitch = findPitchAtNoteByRegex.lastIndex;
-    const noteRightStr = beforeNote.substr(endIndexOfPitch);
-
-    // console.log(`changePitchOfNote() :`);
-    // console.log({ startIndexOfPitch, noteLeftStr, endIndexOfPitch, noteRightStr });
-
-    // console.log(`changePitchOfNote() :`);
-    // console.log(`${noteLeftStr}${pitchStr}${noteRightStr}`);
-
-    return `${noteLeftStr}${pitchStr}${noteRightStr}`;
-}
-
-function isChord(note) {
-    return note.indexOf("[") !== -1;
-}
-
-function isRest(note) {
-    return note.toLowerCase().indexOf("z") !== -1;
-}
-
-function getNotesFromChord(chord) {
-    return /[\\^]?[a-zA-Z],?[0-9]{0,2}/g.exec(chord);
-}
-
-function removeNote(note, pos) {
-    const noteLeftStr = note.substr(0, pos.start);
-    const noteRightStr = note.substr(pos.end);
-    const result = `${noteLeftStr}${noteRightStr}`;
-    const notes = getNotesFromChord(result);
-    if (notes !== null && notes.length === 1) {
-        return notes[0];
-    }
-    return `${noteLeftStr}${noteRightStr}`;
-}
-
-function addNote(chord, note) {
-    if (chord === "z") {
-        return note;
-    }
-    if (!isChord(chord)) {
-        chord = `[${chord}]`;
-    }
-    const startBracketIndex = chord.indexOf("[");
-    const leftStr = chord.substr(0, startBracketIndex + 1);
-    const rightStr = chord.substr(startBracketIndex + 1);
-    return `${leftStr}${note}${rightStr}`;
-}
-
 function applyDragChanges(text, dragStart, dragEnd, mode = "move") {
     // console.log(`applyDragChanges() :`);
-    // console.log({ text, dragStart, dragEnd });
+    console.log({ text, dragStart, dragEnd });
 
-    const isDragStartFirst = dragStart.pos.start <= dragEnd.pos.start;
+    let isDragStartFirst = dragStart.pos.start <= dragEnd.pos.start;
     const isSamePos = dragStart.pos.start === dragEnd.pos.start;
 
-    let dragStartNote = dragStart.note;
-    let dragEndNote = dragEnd.note;
-
     if (mode === "move" && !isSamePos) {
-        let movingNote = dragStartNote;
+        let movingNote = dragStart.note;
 
-        if (isRest(movingNote)) { //쉼표라면
-            dragStartNote = dragEndNote
-            dragEndNote = movingNote;
+        if (dragStart.isRest()) { //쉼표라면
+            dragStart.note = dragEnd.note;
+            dragEnd.note = movingNote;
         }
-        else if (!isChord(movingNote)) { //화음이 아니라면
-            dragStartNote = changePitchOfNote(dragStartNote, -1); //쉼표로 바꾸기
+        else if (!dragStart.isChord()) { //화음이 아니라면
+            dragStart.changePitchOfNote(-1); //쉼표로 바꾸기
         }
         else { //화음이라면
-            dragStartNote = removeNote(dragStartNote, dragStart.clickedPos); //클릭된 음표만 지우기
-            movingNote = dragStart.clickedNote;
+            dragStart.removeNote(dragStart.clickedNote.pos); //클릭된 음표만 지우기
+            movingNote = dragStart.clickedNote.note;
         }
 
-        dragEndNote = addNote(dragEndNote, movingNote); //화음 추가하기
+        dragEnd.addNote(movingNote); //화음 추가하기
+    }
+    else if (mode === "swap") {
+        const temp = dragStart.pos;
+        dragStart.pos = dragEnd.pos;
+        dragEnd.pos = temp;
+        isDragStartFirst = !isDragStartFirst;
     }
 
     const firstPos = isDragStartFirst ? dragStart.pos : dragEnd.pos;
-    const firstNote = isDragStartFirst ? dragStartNote : dragEndNote;
+    const firstNote = isDragStartFirst ? dragStart.note : dragEnd.note;
 
     const secondPos = !isDragStartFirst ? dragStart.pos : dragEnd.pos;
-    const secondNote = !isDragStartFirst ? dragStartNote : dragEndNote;
+    const secondNote = !isDragStartFirst ? dragStart.note : dragEnd.note;
 
     let textArr = [
         text.substr(0, firstPos.start),
@@ -265,23 +195,10 @@ function applyDragChanges(text, dragStart, dragEnd, mode = "move") {
     }
 
     // console.log(`applyDragChanges() :`);
-    // console.log(textArr);
+    console.log(textArr);
 
     const result = textArr.join("");
     return result;
-}
-
-function getNotePosFromChordByPitch(chord, pitchStr) {
-    const findNoteByRegex = new RegExp(`[\\^]*${pitchStr}[0-9]*`, "g");
-    const resultOfRegex = findNoteByRegex.exec(chord);
-    if (resultOfRegex === null) {
-        console.log(`getNotePosFromChordByPitch() : cannot find ${pitchStr}`);
-        return { start: 0, end: 0 };
-    }
-
-    const start = chord.indexOf(resultOfRegex[0]);
-    const end = start + resultOfRegex[0].length;
-    return { start, end };
 }
 
 //드래그 시작/끝 마다 호출됨
@@ -294,44 +211,25 @@ function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent)
     // console.log(`${start} ~ ${end}`);
     // console.log({ abcelem, tuneNumber, classes, analysis, drag, mouseEvent });
 
-    const selectedNote = textarea.value.substr(start, end - start);
-    let clickedNote, clickedPos, pitch = abcelem.averagepitch;
-    if (isChord(selectedNote)) {
+    const selectedNote = new Note();
+    selectedNote.note = textarea.value.substr(start, end - start);
+    selectedNote.pos = { start, end };
+    selectedNote.pitch = abcelem.averagepitch;
+    if (selectedNote.isChord()) {
         const clickedNotePitch = analysis.clickedName;
-        clickedPos = getNotePosFromChordByPitch(selectedNote, clickedNotePitch);
-        clickedNote = selectedNote.substr(clickedPos.start, clickedPos.end - clickedPos.start);
-        pitch = pitches[clickedNotePitch];
+        selectedNote.getClickedNoteByPitch(clickedNotePitch);
     }
+
     if (mouseEvent.type === "mousedown") {
-        globalVariables.setDragStart({
-            note: selectedNote,
-            pos: { start, end },
-            pitch, clickedNote, clickedPos
-        });
+        globalVariables.setDragStart(selectedNote);
         return;
     }
 
     //드래그가 끝났을때
     const dragStart = globalVariables.dragStart;
-    const dragEnd = {
-        note: selectedNote,
-        pos: { start, end },
-        pitch, clickedNote, clickedPos
-    };
+    const dragEnd = selectedNote;
 
-    if (drag.step !== 0) {
-        //dragStart에 음정 변화가 생긴경우
-        dragStart.pitch -= drag.step;
-        if (isRest(dragStart.note)) {
-            ;//쉼표일 경우 음정을 바꾸지 않음
-        }
-        else if (isChord(dragStart.note)) {
-            dragStart.clickedNote = changePitchOfNote(dragStart.clickedNote, dragStart.pitch);
-        }
-        else {
-            dragStart.note = changePitchOfNote(dragStart.note, dragStart.pitch);
-        }
-    }
+    dragStart.changePitch(drag.step);
 
     textarea.value = applyDragChanges(textarea.value, dragStart, dragEnd);
     textarea.dispatchEvent(new Event("change"));
