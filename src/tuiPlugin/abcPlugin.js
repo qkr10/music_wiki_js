@@ -16,23 +16,6 @@ const primeArr = [2, 3, 5, 7, 11,
     199, 211, 223, 227, 229,
     233, 239, 241, 251, 257,
     263, 269, 271];
-const pitches = {
-    z: -1,
-    A: 5,
-    B: 6,
-    C: 0,
-    D: 1,
-    E: 2,
-    F: 3,
-    G: 4,
-    a: 12,
-    b: 13,
-    c: 7,
-    d: 8,
-    e: 9,
-    f: 10,
-    g: 11
-};
 
 function abcPlugin(context) {
     console.log(context);
